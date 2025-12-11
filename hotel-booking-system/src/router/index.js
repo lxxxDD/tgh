@@ -9,6 +9,7 @@ const UserCenter = () => import('../views/UserCenter.vue')
 const Login = () => import('../views/Login.vue')
 const Register = () => import('../views/Register.vue')
 const ForgotPassword = () => import('../views/ForgotPassword.vue')
+const AdminDashboard = () => import('../views/admin/AdminDashboard.vue')
 
 const routes = [
   {
@@ -55,6 +56,12 @@ const routes = [
     name: 'ForgotPassword',
     component: ForgotPassword,
     meta: { guestOnly: true }
+  },
+  {
+    path: '/admin',
+    name: 'AdminDashboard',
+    component: AdminDashboard,
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -67,11 +74,19 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   const isLoggedIn = !!token
+  const role = localStorage.getItem('role')
 
   // 需要登录的页面
   if (to.meta.requiresAuth && !isLoggedIn) {
     ElMessage.warning('请先登录')
     next({ name: 'Login', query: { redirect: to.fullPath } })
+    return
+  }
+
+  // 需要管理员权限的页面
+  if (to.meta.requiresAdmin && role !== 'admin') {
+    ElMessage.error('无权限访问管理后台')
+    next({ name: 'Home' })
     return
   }
 

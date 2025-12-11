@@ -17,3 +17,6 @@ export * from './favorite'
 
 // 评价模块
 export * from './review'
+
+// 管理员模块
+export * from './admin'

@@ -9,11 +9,13 @@ export const useUserStore = defineStore('user', {
     user: null,
     isAuthenticated: false,
     token: null,
+    role: null,
     showLoginModal: false
   }),
   
   getters: {
-    isLoggedIn: (state) => state.isAuthenticated && !!state.token
+    isLoggedIn: (state) => state.isAuthenticated && !!state.token,
+    isAdmin: (state) => state.role === 'admin'
   },
   
   actions: {
@@ -23,8 +25,10 @@ export const useUserStore = defineStore('user', {
         const data = await apiLogin(loginData)
         this.user = data.user
         this.token = data.token
+        this.role = data.role
         this.isAuthenticated = true
         localStorage.setItem('token', data.token)
+        localStorage.setItem('role', data.role)
         return data
       } catch (error) {
         console.error('登录失败:', error)
@@ -38,8 +42,10 @@ export const useUserStore = defineStore('user', {
         const data = await apiRegister(registerData)
         this.user = data.user
         this.token = data.token
+        this.role = data.role || 'user'
         this.isAuthenticated = true
         localStorage.setItem('token', data.token)
+        localStorage.setItem('role', this.role)
         return data
       } catch (error) {
         console.error('注册失败:', error)
@@ -52,19 +58,24 @@ export const useUserStore = defineStore('user', {
       this.user = null
       this.isAuthenticated = false
       this.token = null
+      this.role = null
       localStorage.removeItem('token')
+      localStorage.removeItem('role')
     },
     
     // 从本地存储加载用户信息
     async loadUserFromStorage() {
       const token = localStorage.getItem('token')
+      const role = localStorage.getItem('role')
       if (token) {
         this.token = token
+        this.role = role
         this.isAuthenticated = true
         try {
           // 获取用户信息
           const user = await getUserProfile()
           this.user = user
+          this.role = user.role || role
         } catch (error) {
           // token 失效，清除登录状态
           this.logout()
